@@ -17,28 +17,39 @@ public class character : MonoBehaviour
     private string jumpAnim = "jump";
     private string idleAnim = "idle";
 
-    [SerializeField] private float coyoteTime;
+    [SerializeField] private float coyoteTime, coyoteTimeSet;
+    // COYOTETIMESET MUST BE 0.07 FOR A PERFECT MATCH WITH THIS GAME (RAYCAST DOWNWARDS)
 
 
     void Start()
     {
-        Rigidbody2D playerRigid = GetComponent<Rigidbody2D>();
-        _animator.SetBool("idle", true);
-        _animator.SetBool("jump", false);
-        
+             
         animationCurrentState = idleAnim;
 
-        coyoteTime = 0.5f;
     }
 
     void Update()
     {
         float xFromAxis = Input.GetAxisRaw("Horizontal");
-        // WONT BE USED BECAUSE WE HAVE THE RIGID FORCE APPLIED ON INPUT.GETKEY W // float yFromAxis = Input.GetAxisRaw("Vertical");
+        // float yFromAxis = Input.GetAxisRaw("Vertical"); // WONT BE USED BECAUSE WE HAVE THE RIGID FORCE APPLIED ON INPUT.GETKEY W 
 
+        // GAMEOBJECT MOVEMENT DIRECTION
         Vector2 directionToMoveFromAxis = new Vector2(xFromAxis, 0f).normalized;
 
+        // TO AVOID GOING THROUGH A WALL WHEN WALKING TOWARDS ONE
+        if (toRight && directionToMoveFromAxis.x >= 0)
+        {
+            directionToMoveFromAxis.x = 0;
+        }
+
+        else if (toLeft && directionToMoveFromAxis.x <= 0)
+        {
+            directionToMoveFromAxis.x = 0;
+        }
+
+        // GAMEOBJECT MOVEMENT
         transform.position = new Vector2(transform.position.x, transform.position.y) + directionToMoveFromAxis * movement * Time.deltaTime;
+
 
         // CHECKING DOWNWARDS FOR COYOTE DISTANCE TO GROUND
         RaycastHit2D[] hitsDown = Physics2D.RaycastAll(transform.position, -Vector2.up, 4);
@@ -120,23 +131,11 @@ public class character : MonoBehaviour
 
         }
 
-        // SIMPLE RIGHT
-        else if (Input.GetKey("d") && !toRight)
-        {
-            //transform.position = new Vector2(player.transform.position.x + movement * Time.deltaTime, transform.position.y);
-            // GetComponent<Rigidbody2D>().velocity = new Vector3(movement, 0f, 0f);
-            GetComponent<SpriteRenderer>().flipX = false;
+        // SIMPLE FLIP
+        else if (Input.GetKey("d")) { GetComponent<SpriteRenderer>().flipX = false; }
 
-        }
-
-        // SIMPLE LEFT
-        else if (Input.GetKey("a") && !toLeft)
-        {
-            //transform.position = new Vector2(transform.position.x - movement * Time.deltaTime, transform.position.y);
-            // GetComponent<Rigidbody2D>().velocity = new Vector3(-movement, 0f, 0f);
-            GetComponent<SpriteRenderer>().flipX = true;
-
-        }
+        // SIMPLE FLIP
+        else if (Input.GetKey("a")) { GetComponent<SpriteRenderer>().flipX = true; }
 
         // IDLE
         if (onGround && !Input.GetKey("d") && !Input.GetKey("a"))
@@ -167,7 +166,7 @@ public class character : MonoBehaviour
             changeAnimationStateTo(idleAnim);
         }
         // restarting the coyote when touching the ground
-        else if (onGround) { coyoteTime = 0.07f; }
+        else if (onGround) { coyoteTime = coyoteTimeSet; }
 
          
 
